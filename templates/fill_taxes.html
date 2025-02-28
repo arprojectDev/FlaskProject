@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заполнение налогов</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+        }
+        .navbar {
+            width: 100%;
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            width: 100px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            color: #ff5e62;
+            
+        }
+        .logout-btn i {
+            font-size: 24px;
+        }
+        .logback-btn i {
+            font-size: 24px;
+            content: "\F0343";
+        }
+        
+        .container {
+            text-align: left;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 90%;
+            max-width: 200px;
+            margin-left: 10px;
+        }
+        select, .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            text-align: left;
+        }
+        .btn {
+            background: #ff5e62;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background: #ff3b4a;
+        }
+        .hidden {
+            display: none;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 10px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .cards {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .card {
+            width: 200px;
+            padding: 20px;
+            background: #ff5e62;
+            color: white;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .card:hover {
+            background: #ff3b4a;
+        }
+
+        table.iksweb{
+	width: 100%;
+	border-collapse:collapse;
+	border-spacing:0;
+	height: auto;
+}
+table.iksweb,table.iksweb td, table.iksweb th {
+	border: 1px solid #595959;
+}
+table.iksweb td,table.iksweb th {
+	padding: 3px;
+	width: 30px;
+	height: 35px;
+}
+table.iksweb th {
+	    background: #4e6982;
+	color: #fff; 
+	font-weight: normal;
+}
+.parent {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+grid-template-rows: 1fr;
+grid-column-gap: 15px;
+grid-row-gap: 0px;
+}
+    </style>
+</head>
+<body>
+    <!-- Верхняя панель -->
+    <div class="navbar">
+        <img src="https://ptc-holding.kz/wp-content/themes/ptc-theme/assets/img/logo.png" class="logo" alt="Лого">
+        <div class="user-info">
+            <a href="{{ url_for('index') }}" class="btn-small red">⬅ Назад</a>
+        </div>
+    </div>
+    <h3>Заполнение налогов</h3>
+    <div class="parent">
+        <div class="div1"><label for="company">Выбор компании:</label>
+            <!-- Выбор компании -->
+            <div class="input-field">
+    
+                    <select id="company" name="org_id" class="browser-default">
+                        {% for company in companies %}
+                            <option value="{{ company.id }}">{{ company.name }}</option>
+                        {% endfor %}
+                    </select>
+            </div></div>
+        <div class="div2">
+            <label for="company">Год:</label>
+            <div class="input-field">
+    
+                <select id="company" name="org_id" class="browser-default">
+                    {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+        </div>
+    </div>
+        <div class="div3">
+            <label for="company">Месяц:</label>
+            <div class="input-field">
+    
+                <select id="company" name="org_id" class="browser-default">
+                    {% for month in months %}
+                        <option value="{{ month }}">{{ month }}</option>
+                    {% endfor %}
+                </select>
+        </div>
+    </div>
+   </div>
+        
+
+
+
+        
+
+    <table class="iksweb">
+        <tr>
+            <td colspan="2">
+                <table id="taxesTable" class="striped">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Код налога</th>
+                            <th>Сумма</th>
+                            <th>Дата создания</th>
+                            <th>Компания</th>
+                            <th>Пользователь</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Данные будут загружаться динамически -->
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+</table>  
+
+    <div class="footer">a.amirov@ptc-holding.kz</div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            M.FormSelect.init(document.querySelectorAll("select"));
+        });
+
+        document.getElementById("saveDataBtn").addEventListener("click", function() {
+            let companyId = document.getElementById("companySelect").value;
+            let refId = document.getElementById("refId").value;
+            let amount = document.getElementById("amount").value;
+
+            if (!companyId || !refId || !amount) {
+                alert("Заполните все поля!");
+                return;
+            }
+
+            fetch("/save_tax", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    org_id: companyId,
+                    ref_id: refId,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                if (responseData.success) {
+                    alert("Запись добавлена!");
+                    location.reload();
+                } else {
+                    alert("Ошибка: " + responseData.error);
+                }
+            })
+            .catch(error => console.error("Ошибка запроса:", error));
+        });
+
+        function loadTaxesByYear() {
+        var year = document.getElementById("year").value;
+        fetch("/get_taxes_by_year", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ year: year })
+        })
+        .then(response => response.json())
+        .then(data => {
+            var tableBody = document.querySelector("#taxesTable tbody");
+            tableBody.innerHTML = "";
+            
+            data.taxes.forEach(tax => {
+                var row = `<tr>
+                    <td>${tax.period}</td>
+                    <td>${tax.ref_id}</td>
+                    <td>${tax.amount}</td>
+                    <td>${tax.created_at}</td>
+                    <td>${tax.org_id}</td>
+                    <td>${tax.users_id}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        });
+    }      
+    </script>
+</body>
+</html>

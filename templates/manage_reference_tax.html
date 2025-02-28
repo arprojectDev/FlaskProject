@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление справочником налогов</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .navbar {
+            width: 100%;
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+        }
+        .btn {
+            margin-top: 10px;
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 10px;
+            font-size: 14px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="{{ url_for('index') }}" class="btn-small red">⬅ Назад</a>
+        <h4>Справочник налогов</h4>
+    </div>
+
+    <div class="container">
+        <h5>Текущие записи</h5>
+        <div class="table-container">
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Код</th>
+                        <th>Группа</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in reference_tax %}
+                    <tr>
+                        <td>{{ record.id }}</td>
+                        <td>{{ record.name }}</td>
+                        <td>{{ record.order_acc }}</td>
+                        <td>{{ record.group_name }}</td>
+                        <td>
+                            <button class="btn-small blue edit-btn" data-id="{{ record.id }}" data-name="{{ record.name }}" data-code="{{ record.order_acc }}" data-group="{{ record.group_name }}">✏ Изменить</button>
+                            <button class="btn-small red delete-btn" data-id="{{ record.id }}">🗑 Удалить</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h5>Добавить новую запись</h5>
+        <form id="addReferenceTaxForm">
+            <div class="input-field">
+                <input type="text" id="name" required>
+                <label for="name">Название</label>
+            </div>
+            <div class="input-field">
+                <input type="text" id="order_acc" required>
+                <label for="order_acc">Код</label>
+            </div>
+            <div class="input-field">
+                <input type="text" id="group_name" required>
+                <label for="group_name">Группа</label>
+            </div>
+            <button class="btn green" type="submit">Добавить</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("addReferenceTaxForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let data = {
+                name: document.getElementById("name").value,
+                order_acc: document.getElementById("order_acc").value,
+                group_name: document.getElementById("group_name").value
+            };
+
+            fetch("/add_reference_tax", {
+                method: "POST",
+                headers: { "Content-Type": "a

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление налоговых данных</title>
+    <!-- Подключение Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Ваши пользовательские стили -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navbar, .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .navbar {
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        .btn {
+            margin-top: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        th, td {
+            text-align: left;
+        }
+        .level-1 {
+            font-weight: bold;
+            background-color: #e0f7fa;
+            cursor: pointer;
+        }
+        .level-2 {
+            padding-left: 20px;
+            font-weight: bold;
+            background-color: #e0f2f1;
+            cursor: pointer;
+        }
+        .level-3 {
+            padding-left: 40px;
+        }
+        .hidden {
+            display: none;
+        }
+        .expand-collapse-icon {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #ffe0b2;
+        }
+    </style><style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navbar, .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .navbar {
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        .btn {
+            margin-top: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        th, td {
+            text-align: left;
+        }
+        .level-1 {
+            font-weight: bold;
+            background-color: #e0f7fa;
+            cursor: pointer;
+        }
+        .level-2 {
+            padding-left: 20px;
+            font-weight: bold;
+            background-color: #e0f2f1;
+            cursor: pointer;
+        }
+        .level-3 {
+            padding-left: 40px;
+        }
+        .hidden {
+            display: none;
+        }
+        .expand-collapse-icon {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #ffe0b2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="{{ url_for('view_taxes') }}" class="btn-small red">⬅ Назад</a>
+        <h4>Добавление налоговых данных</h4>
+    </div>
+
+    <div class="container">
+        <h5>Добавить новую запись</h5>
+        <form id="addTaxEntryForm">
+            <input type="hidden" id="action" value="add">
+            <div class="input-field">
+                <select id="ref_id" required>
+                    <option value="" disabled selected>Выберите налог</option>
+                    <!-- Значения будут загружаться динамически -->
+                </select>
+                <label for="ref_id">Налог</label>
+            </div>
+
+            <div class="input-field">
+                <select id="year" required>
+                    <option value="" disabled selected>Выберите год</option>
+                   <!-- {% for y in available_years %}
+                        <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %} -->
+                    {% for y in  [
+                        ('2021'), ('2022'),('2023'),('2024'),('2025'),('2026'),('2027')
+                        ] %}
+                        <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+                <label for="year">Год</label>
+            </div>
+
+            <div class="input-field">
+                <select id="month" required>
+                    <option value="" disabled selected>Выберите месяц</option>
+                    {% for month_num, month_name in [
+                        (1, 'Январь'), (2, 'Февраль'), (3, 'Март'), (4, 'Апрель'), (5, 'Май'), (6, 'Июнь'),
+                        (7, 'Июль'), (8, 'Август'), (9, 'Сентябрь'), (10, 'Октябрь'), (11, 'Ноябрь'), (12, 'Декабрь')
+                    ] %}
+                        <option value="{{ month_num }}" {% if month_num == month|int %}selected{% endif %}>{{ month_name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="month">Месяц</label>
+            </div>
+
+            <div class="input-field">
+                <input type="number" id="amount" step="0.01" required>
+                <label for="amount">Сумма</label>
+            </div>
+
+            <div class="input-field">
+                <select id="org_id" required>
+                    <option value="" disabled selected>Выберите организацию</option>
+                    {% for company in companies %}
+                        <option value="{{ company.id }}" {% if company.id == org_id|int %}selected{% endif %}>{{ company.name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="org_id">Организация</label>
+            </div>
+
+            <button class="btn waves-effect waves-light green" type="submit">Добавить</button>
+        </form>
+
+        {% if tax_entries %}
+        <h5>Существующие записи за {{ month }}/{{ year }}</h5>
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Налог</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in tax_entries %}
+                <tr>
+                    <td>{{ entry.ref_name }}</td>
+                    <td>
+                        <input type="number" id="amount-{{ entry.id }}" value="{{ entry.amount }}" step="0.01">
+                    </td>
+                    <td>
+                        <button class="btn-small blue" onclick="editEntry({{ entry.id }})">Изменить</button>
+                        <button class="btn-small red" onclick="deleteEntry({{ entry.id }})">Удалить</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+    </div>
+
+    <!-- Подключение Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Инициализация компонентов Materialize -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var selects = document.querySelectorAll('select');
+            M.FormSelect.init(selects);
+
+            // Загружаем данные из ReferenceTax и заполняем выпадающий список
+            fetch("/get_reference_tax")
+                .then(response => response.json())
+                .then(data => {
+                    const refSelect = document.getElementById("ref_id");
+                    data.forEach(item => {
+                        const option = document.createElement("option");
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        refSelect.appendChild(option);
+                    });
+                    M.FormSelect.init(refSelect);
+                });
+
+            // Обработка отправки формы
+            document.getElementById("addTaxEntryForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                const action = document.getElementById("action").value;
+                const year = document.getElementById("year").value;
+                const month = document.getElementById("month").value.padStart(2, '0');
+                const _period = `${year}-${month}-01`;
+
+                let data = {
+                    action: action,
+                    _period: _period,
+                    ref_id: document.getElementById("ref_id").value,
+                    amount: document.getElementById("amount").value,
+                    org_id: document.getElementById("org_id").value
+                };
+
+                fetch("/add_taxes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        // Перезагружаем страницу для обновления данных
+                        window.location.reload();
+                    } else if (data.error) {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+
+        // Функция для удаления записи
+        function deleteEntry(id) {
+            if (confirm("Вы уверены, что хотите удалить эту запись?")) {
+                let data = {
+                    action: "delete",
+                    id: id
+                };
+                fetch("/add_taxes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при удалении записи.");
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        // Функция для изменения записи
+        function editEntry(id) {
+            const amount = document.getElementById(`amount-${id}`).value;
+            let data = {
+                action: "edit",
+                id: id,
+                amount: amount
+            };
+            fetch("/add_taxes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert("Ошибка при обновлении записи.");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>

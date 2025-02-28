@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+        }
+        .navbar {
+            width: 100%;
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            width: 100px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            color: #ff5e62;
+        }
+        .logout-btn i {
+            font-size: 24px;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+        }
+        select, .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .btn {
+            background: #ff5e62;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background: #ff3b4a;
+        }
+        .hidden {
+            display: none;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 10px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .cards {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .card {
+            width: 200px;
+            padding: 20px;
+            background: #ff5e62;
+            color: white;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .card:hover {
+            background: #ff3b4a;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Верхняя панель -->
+    <div class="navbar">
+        <img src="https://ptc-holding.kz/wp-content/themes/ptc-theme/assets/img/logo.png" class="logo" alt="Лого">
+        <div class="user-info">
+            <span>Привет, {{ user.name }}!</span>
+            <button class="logout-btn" onclick="window.location.href='{{ url_for('logout') }}'">
+                <i class="mdi mdi-logout"></i> 
+            </button>
+        </div>
+    </div>
+
+    <!-- Выбор компании -->
+
+   <div class="container">
+        <h3>Выберите действие</h3>
+        <div class="cards">
+            <!-- <div class="card" onclick="window.location.href='{{ url_for('fill_taxes') }}'">Налоги</div>-->
+            <div class="card" onclick="window.location.href='{{ url_for('view_taxes') }}'">Налоги</div>
+            <div class="card" onclick="window.location.href='{{ url_for('fill_budget') }}'">Бюджет</div>
+
+        </div>
+    </div>
+
+    <div class="footer">
+        a.amirov@ptc-holding.kz
+    </div>
+
+    <script>
+        document.getElementById("companySelect").addEventListener("change", function() {
+            document.getElementById("buttonsContainer").classList.remove("hidden");
+        });
+
+        function goToPage(page) {
+            const companyId = document.getElementById("companySelect").value;
+            if (!companyId) return;
+            window.location.href = `/${page}?org_id=${companyId}`;
+        }
+
+        {% if not user.is_admin %}
+            document.getElementById("buttonsContainer").classList.remove("hidden");
+        {% endif %}
+    </script>
+</body>
+</html>

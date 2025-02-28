@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Данные по налогам</title>
+    <!-- Подключение Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Ваши пользовательские стили -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navbar, .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .navbar {
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        .btn {
+            margin-top: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        th, td {
+            text-align: left;
+        }
+        .level-1 {
+            font-weight: bold;
+            background-color: #e0f7fa;
+            cursor: pointer;
+        }
+        .level-2 {
+            padding-left: 20px;
+            font-weight: bold;
+            background-color: #e0f2f1;
+            cursor: pointer;
+        }
+        .level-3 {
+            padding-left: 40px;
+        }
+        .hidden {
+            display: none;
+        }
+        .expand-collapse-icon {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #ffe0b2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="{{ url_for('index') }}" class="btn-small red">⬅ Назад</a>
+        <h4>Данные по налогам</h4>
+    </div>
+
+    <div class="container">
+        <form id="filterForm" method="post">
+            <!-- Форма выбора организации, года и месяца -->
+            <div class="input-field">
+                <select id="org_id" name="org_id" required>
+                    <option value="" disabled selected>Выберите организацию</option>
+                    {% for company in companies %}
+                        <option value="{{ company.id }}" {% if company.id == org_id %}selected{% endif %}>{{ company.name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="org_id">Организация</label>
+            </div>
+            <div class="input-field">
+                <select id="year" name="year" required>
+                    <option value="" disabled selected>Выберите год</option>
+                    {% for y in available_years %}
+                        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+                <label for="year">Год</label>
+            </div>
+            <div class="input-field">
+                <select id="month" name="month">
+                    <option value="" {% if not month %}selected{% endif %}>Все месяцы</option>
+                    {% for month_num, month_name in [(1, 'Январь'), (2, 'Февраль'), (3, 'Март'), (4, 'Апрель'), (5, 'Май'), (6, 'Июнь'), (7, 'Июль'), (8, 'Август'), (9, 'Сентябрь'), (10, 'Октябрь'), (11, 'Ноябрь'), (12, 'Декабрь')] %}
+                        <option value="{{ month_num }}" {% if month_num == month|int %}selected{% endif %}>{{ month_name }}</option>
+                    {% endfor %}
+                </select>
+                <label for="month">Месяц</label>
+            </div>
+            <button class="btn waves-effect waves-light green" type="submit">Показать данные</button>
+
+            <a href="{{ url_for('edit_taxes', org_id=org_id, month=month, year=year) }}" class="btn waves-effect waves-light blue">Удалить/Изменить</a>
+        </form>
+
+        {% if taxes_data %}
+        <div class="table-container">
+            <h5>Данные по налогам</h5>
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        {% for month_name in months_list %}
+                            <th>{{ month_name }}</th>
+                        {% endfor %}
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for first_level in taxes_data %}
+                        {% set first_index = loop.index0 %}
+                        <!-- Уровень 1 -->
+                        <tr class="level-1" data-level="1" data-id="lvl1-{{ first_index }}" onclick="toggleRows('lvl1-{{ first_index }}')">
+                            <td><span class="expand-collapse-icon">➕</span>{{ first_level }}</td>
+                            {% for month_name in months_list %}
+                                <td>{{ "%.2f"|format(taxes_data[first_level]['per_month'].get(month_name, 0)) }}</td>
+                            {% endfor %}
+                            <td>{{ "%.2f"|format(taxes_data[first_level]['total']) }}</td>
+                        </tr>
+                        {% for second_level in taxes_data[first_level]['children'] %}
+                            {% set second_index = loop.index0 %}
+                            <!-- Уровень 2 -->
+                            <tr class="level-2 hidden parent-lvl1-{{ first_index }}" data-level="2" data-id="lvl2-{{ first_index }}-{{ second_index }}" onclick="toggleRows('lvl2-{{ first_index }}-{{ second_index }}')">
+                                <td><span class="expand-collapse-icon">➕</span>{{ second_level }}</td>
+                                {% for month_name in months_list %}
+                                    <td>{{ "%.2f"|format(taxes_data[first_level]['children'][second_level]['per_month'].get(month_name, 0)) }}</td>
+                                {% endfor %}
+                                <td>{{ "%.2f"|format(taxes_data[first_level]['children'][second_level]['total']) }}</td>
+                            </tr>
+                            {% for third_level in taxes_data[first_level]['children'][second_level]['children'] %}
+                                <!-- Уровень 3 -->
+                                <!-- Нет необходимости в индексе для третьего уровня -->
+                                <tr class="level-3 hidden parent-lvl2-{{ first_index }}-{{ second_index }}" data-level="3">
+                                    <td>{{ third_level }}</td>
+                                    {% for month_name in months_list %}
+                                        <td>{{ "%.2f"|format(taxes_data[first_level]['children'][second_level]['children'][third_level]['amounts'].get(month_name, 0)) }}</td>
+                                    {% endfor %}
+                                    <td>{{ "%.2f"|format(taxes_data[first_level]['children'][second_level]['children'][third_level]['total']) }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                    <!-- Общий итог по месяцам -->
+                    <tr class="total-row">
+                        <td>Общий итог</td>
+                        {% for month_name in months_list %}
+                            <td>{{ "%.2f"|format(total_per_month.get(month_name, 0)) }}</td>
+                        {% endfor %}
+                        <td>{{ "%.2f"|format(total_sum) }}</td>
+                    </tr>
+                </tbody>
+            
+        </div>
+        {% else %}
+        <p>Нет данных для отображения</p>
+        {% endif %}
+
+        {% if org_id and year %}
+        <a href="{{ url_for('add_taxes', org_id=org_id, month=month, year=year) }}" class="btn-small green">➕ Добавить данные</a>
+        {% endif %}
+    </div>
+
+    <!-- Подключение Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Инициализация компонентов Materialize -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация селектов
+            var selects = document.querySelectorAll('select');
+            M.FormSelect.init(selects);
+        });
+
+        function toggleRows(id) {
+            var rows = document.querySelectorAll('.parent-' + id);
+            var currentRow = document.querySelector('[data-id="' + id + '"]');
+            var icon = currentRow.querySelector('.expand-collapse-icon');
+            var isHidden = rows.length > 0 && rows[0].classList.contains('hidden');
+
+            if (isHidden) {
+                // Развернуть
+                rows.forEach(function(row) {
+                    row.classList.remove('hidden');
+                });
+                icon.textContent = '➖';
+            } else {
+                // Свернуть
+                hideChildRows(rows);
+                icon.textContent = '➕';
+            }
+        }
+
+        function hideChildRows(rows) {
+            rows.forEach(function(row) {
+                row.classList.add('hidden');
+                var level = row.getAttribute('data-level');
+                var rowId = row.getAttribute('data-id');
+                var icon = row.querySelector('.expand-collapse-icon');
+                if (icon) {
+                    icon.textContent = '➕';
+                }
+                var childRows = document.querySelectorAll('.parent-' + rowId);
+                if (childRows.length > 0) {
+                    hideChildRows(childRows);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

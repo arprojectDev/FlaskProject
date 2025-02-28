@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр данных</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <style>
+        .table-container {
+            overflow-x: auto;
+            max-height: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            text-align: left;
+            padding: 6px 10px;
+            font-size: 14px;
+            min-width: 80px;
+        }
+        thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f5f5f5;
+            z-index: 2;
+        }
+        .toggle {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .level-1 {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .level-2 {
+            background-color: #f0f0f0;
+            padding-left: 20px;
+        }
+        .level-3 {
+            padding-left: 40px;
+            max-width: 400px; /* Расширяем столбец для длинных названий */
+            white-space: normal; /* Разрешаем перенос строк */
+            word-wrap: break-word;
+        }
+        .hidden {
+            display: none;
+        }
+        .month-header {
+            min-width: 100px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="blue">
+        <div class="nav-wrapper container">
+            <a href="{{ url_for('index') }}" class="brand-logo">На главную</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h5>Просмотр данных</h5>
+
+        <form method="POST">
+            <div class="input-field">
+                <select name="organization">
+                    <option value="" disabled selected>Выберите компанию</option>
+                    {% for org in organizations %}
+                        <option value="{{ org.id }}" {% if selected_org and selected_org|string == org.id|string %}selected{% endif %}>
+                            {{ org.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label>Компания</label>
+            </div>
+
+            <div class="input-field">
+        <select name="year">
+            <option value="" disabled selected>Выберите год</option>
+            {% for year in years %}
+                <option value="{{ year.year }}" {% if selected_year and selected_year|string == year.year|string %}selected{% endif %}>
+                    {{ year.year }}
+                </option>
+            {% endfor %}
+        </select>
+        <label>Год</label>
+    </div>
+
+            <button type="submit" class="waves-effect waves-light btn blue">Вывести данные</button>
+        </form>
+        
+        {% if data %}
+        <button onclick="toggleAll()" class="waves-effect waves-light btn-small blue">+ / -</button>
+        <div class="table-container">
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th style="min-width: 250px;">Показатель</th> <!-- Первый столбец шире -->
+                        {% set months = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"] %}
+                        {% for month in months %}
+                            <th class="month-header">{{ month }}</th>
+                        {% endfor %}
+                        <th>Итого</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for first_level, groups in data.items() %}
+                        <tr class="level-1">
+                            <td class="toggle" onclick="toggleRow('lvl1-{{ loop.index }}')">-> {{ first_level }}</td>
+                            {% for month in range(1, 13) %}
+                                <td>{{ "%.2f"|format(groups._total.get(month, 0)) }}</td>
+                            {% endfor %}
+                            <td>{{ "%.2f"|format(groups._total_year) }}</td>
+                        </tr>
+                        {% set lvl1_index = loop.index %}
+                        {% for group_name, indicators in groups.groups.items() %}
+                            <tr class="level-2 hidden lvl1-{{ lvl1_index }}">
+                                <td class="toggle" onclick="toggleRow('lvl2-{{ lvl1_index }}-{{ loop.index }}')">-> {{ group_name }}</td>
+                                {% for month in range(1, 13) %}
+                                    <td>{{ "%.2f"|format(indicators._total.get(month, 0)) }}</td>
+                                {% endfor %}
+                                <td>{{ "%.2f"|format(indicators._total_year) }}</td>
+                            </tr>
+                            {% set lvl2_index = loop.index %}
+                            {% for indicator, values in indicators.indicators.items() %}
+                                <tr class="level-3 hidden lvl2-{{ lvl1_index }}-{{ lvl2_index }}">
+                                    <td>{{ indicator }}</td>
+                                    {% for month in range(1, 13) %}
+                                        <td>{{ "%.2f"|format(values.get(month, 0)) }}</td>
+                                    {% endfor %}
+                                    <td>{{ "%.2f"|format(values.total) }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            M.FormSelect.init(document.querySelectorAll("select"));
+        });
+
+        function toggleRow(className) {
+            let rows = document.querySelectorAll("." + className);
+            rows.forEach(row => {
+                row.classList.toggle("hidden");
+            });
+        }
+
+        function toggleAll() {
+            let rows = document.querySelectorAll(".level-2, .level-3");
+            let allHidden = Array.from(rows).every(row => row.classList.contains("hidden"));
+            rows.forEach(row => {
+                row.classList.toggle("hidden", !allHidden);
+            });
+        }
+    </script>
+
+</body>
+</html>

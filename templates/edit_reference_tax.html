@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Изменение и удаление записей из _ReferenceTax</title>
+    <!-- Подключение Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    
+    <!-- Ваши пользовательские стили -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5d8d1, #fcb6b7);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .navbar, .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .navbar {
+            background: white;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        .btn {
+            margin-top: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        th, td {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="{{ url_for('index') }}" class="btn-small red">⬅ Назад</a>
+        <h4>Изменение и удаление записей из _ReferenceTax</h4>
+    </div>
+
+    <div class="container">
+        <h5>Добавить новую запись</h5>
+        <form id="addReferenceTaxForm">
+            <input type="hidden" id="action" value="add">
+            <div class="input-field">
+                <input type="text" id="first_level_name" required>
+                <label for="first_level_name">First Level Name</label>
+            </div>
+
+            <div class="input-field">
+                <input type="text" id="group_name" required>
+                <label for="group_name">Group Name</label>
+            </div>
+
+            <div class="input-field">
+                <input type="text" id="name" required>
+                <label for="name">Name</label>
+            </div>
+
+            <div class="input-field">
+                <input type="text" id="description">
+                <label for="description">Description</label>
+            </div>
+
+            <div class="input-field">
+                <input type="number" id="value" step="0.01">
+                <label for="value">Value</label>
+            </div>
+
+            <button class="btn waves-effect waves-light green" type="submit">Добавить</button>
+        </form>
+
+        {% if reference_tax_entries %}
+        <h5>Существующие записи</h5>
+        <div class="table-container">
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>First Level Name</th>
+                        <th>Group Name</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Value</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in reference_tax_entries %}
+                    <tr>
+                        <td>
+                            <input type="text" id="first_level_name-{{ entry.id }}" value="{{ entry.first_level_name }}" required>
+                        </td>
+                        <td>
+                            <input type="text" id="group_name-{{ entry.id }}" value="{{ entry.group_name }}" required>
+                        </td>
+                        <td>
+                            <input type="text" id="name-{{ entry.id }}" value="{{ entry.name }}" required>
+                        </td>
+                        <td>
+                            <input type="text" id="description-{{ entry.id }}" value="{{ entry.description }}">
+                        </td>
+                        <td>
+                            <input type="number" id="value-{{ entry.id }}" value="{{ entry.value }}" step="0.01">
+                        </td>
+                        <td>
+                            <button class="btn-small blue" type="button" onclick="editEntry({{ entry.id }})">Изменить</button>
+                            <button class="btn-small red" type="button" onclick="deleteEntry({{ entry.id }})">Удалить</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Подключение Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Инициализация компонентов Materialize -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var selects = document.querySelectorAll('select');
+            M.FormSelect.init(selects);
+
+            // Обработка отправки формы добавления
+            document.getElementById("addReferenceTaxForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                let data = {
+                    action: "add",
+                    first_level_name: document.getElementById("first_level_name").value,
+                    group_name: document.getElementById("group_name").value,
+                    name: document.getElementById("name").value,
+                    description: document.getElementById("description").value,
+                    value: document.getElementById("value").value
+                };
+
+                fetch("/edit_reference_tax", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        // Перезагружаем страницу для обновления данных
+                        window.location.reload();
+                    } else if (data.error) {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+
+        // Функция для удаления записи
+        function deleteEntry(id) {
+            if (confirm("Вы уверены, что хотите удалить эту запись?")) {
+                let data = {
+                    action: "delete",
+                    id: id
+                };
+                fetch("/edit_reference_tax", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert("Ошибка при удалении записи.");
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        // Функция для изменения записи
+        function editEntry(id) {
+            const first_level_name = document.getElementById(`first_level_name-${id}`).value;
+            const group_name = document.getElementById(`group_name-${id}`).value;
+            const name = document.getElementById(`name-${id}`).value;
+            const description = document.getElementById(`description-${id}`).value;
+            const value = document.getElementById(`value-${id}`).value;
+            let data = {
+                action: "edit",
+                id: id,
+                first_level_name: first_level_name,
+                group_name: group_name,
+                name: name,
+                description: description,
+                value: value
+            };
+            fetch("/edit_reference_tax", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert("Ошибка при обновлении записи.");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>
